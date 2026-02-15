@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sorpresa 🌙</title>
+
+<style>
+body{
+  margin:0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg,#0f2027,#203a43,#2c5364);
+  overflow:hidden;
+  text-align:center;
+  color:white;
+}
+
+/* Pantalla login */
+#login, #game{
+  width:100%;
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  background: radial-gradient(circle at top,#1a1a2e,#16213e,#0f3460);
+}
+#login > h2 {
+    font-size: 3rem;
+}
+#login > span {
+    font-size: 2rem;
+}
+
+/* Input y botón */
+input{
+  padding:12px;
+  border:none;
+  border-radius:20px;
+  margin-top:15px;
+  text-align:center;
+  font-size:16px;
+  font-size: 1.5rem;
+}
+
+button{
+  padding:10px 20px;
+  border:none;
+  border-radius:20px;
+  margin-top:10px;
+  background:#e94560;
+  color:white;
+  font-weight:bold;
+  font-size: 2rem;
+}
+
+/* Juego */
+.heart{
+  position:absolute;
+  font-size:50px;
+  cursor:pointer;
+  animation: float 12s linear infinite;
+}
+
+/* @keyframes float{
+  from{transform: translateY(100vh);}
+  to{transform: translateY(-10vh);}
+} */
+@keyframes float{
+  from { transform: translateY(0); }     /* empieza abajo */
+  to   { transform: translateY(-110vh); } /* sube hasta más arriba del viewport */
+}
+
+
+#messageBox{
+  position:fixed;
+  bottom:20px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#ffffff;
+  color:#e94560;
+  padding:10px 20px;
+  border-radius:20px;
+  display:none;
+}
+
+#score{
+  position:fixed;
+  top:10px;
+  right:15px;
+  font-size:18px;
+}
+
+/* ✨ Estrellas y mariposas */
+.particle{
+  position:absolute;
+  font-size:18px;
+  animation: floatUp 6s linear forwards;
+  opacity:0.8;
+}
+
+@keyframes floatUp{
+  from{transform:translateY(0) rotate(0deg); opacity:1;}
+  to{transform:translateY(-100vh) rotate(360deg); opacity:0;}
+}
+
+/* 💌 Carta final */
+#finalLetter{
+  display:none;
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%) scale(0);
+  background:#1a1a2e;
+  color:#fff;
+  padding:25px;
+  border-radius:20px;
+  width:85%;
+  max-width:320px;
+  box-shadow:0 0 25px rgba(255,255,255,0.3);
+  animation: openLetter 1.5s forwards;
+}
+
+@keyframes openLetter{
+  to{transform:translate(-50%,-50%) scale(1);}
+}
+</style>
+</head>
+<body>
+
+<audio id="bgMusic" loop>
+  <source src="music.mp4" type="audio/mpeg">
+</audio>
+
+<div id="login">
+  <h2>🌙 Gus Nais 🌙</h2>
+  <span>Para jugar tienes que decirme que no mientes:</span>
+  <input type="password" id="password" placeholder="La contraseña pofavorcito..." length="100">
+  <button onclick="checkPassword()">Jugar</button>
+</div>
+
+<div id="game">
+  <div id="score">💖 0</div>
+</div>
+
+<div id="messageBox"></div>
+
+<div id="finalLetter">
+  <h2>💌 Para ti</h2>
+  <p>
+  En esta noche llena de estrellas ✨<br><br>
+  ✨quiero que sepas que tu amistad✨<br>
+  ✨brilla más que cualquier constelación 🌌<br><br>
+  Gracias ✨ Amiguita :D ✨ Dayán Maryán C.C ✨
+  </p>
+</div>
+
+<script>
+const correctPassword = "nomiento";
+let score = 0;
+
+const messages = [
+"Te encanta ser independiente y luchar por tus sueños 💪✨",
+"Siempre piensas primero en tu familia 💖",
+"Quieres viajar y conocer el mundo 🌍✈️",
+"No te gustan las mentiras, valoras mucho la sinceridad 🤍",
+"Te preocupas por mi descanso más que yo mismo 😴💫",
+"Siempre me dices que cuide mi salud 🫶",
+"Te gusta aprender cosas nuevas 📚✨",
+"Adoras tu País 😂💖",
+"Te encanta bromear conmigo 😜",
+"Confías en tu palabra y cumples lo que dices 🤝",
+"Te gusta ayudar a los demás sin esperar nada 💕",
+"Sueñas con crear una ONG para ayudar niños 🌱💖",
+"Eres fuerte aunque no siempre lo muestres 💫",
+"Te encanta hablar de viajes 🏖️🌄",
+"Te gusta ver atardeceres ☀️",
+"Amas tu trabajo y lo haces con pasión 💼✨",
+"Te esfuerzas incluso cuando estás cansada 😴💪",
+"Te preocupa el futuro y quieres hacerlo bien 🌸",
+"No te gustan las injusticias 😔💔",
+"Siempre buscas hacer lo correcto 🤍",
+"Te gusta la música para haacer tus cosas 🎶✨",
+"Te encanta dar consejos lindos 💕",
+"Siempre me animas cuando dudo 💖",
+"Confías en mi potencial más que yo 😌",
+"Vamos por Hamburguesas?🏆💫",
+"Te encanta burlarte de mis hamburguesas 🍔😂",
+"Siempre te ríes de mis ocurrencias 😆",
+"Te gusta ahorrar pero también darte gustitos 🛍️💖",
+"Te gusta soñar en grande 🌙✨",
+"No te gustan las relaciones por miedo a sufrir (es mi conclusión jajaja)💔",
+"Prefieres tu paz mental 🕊️",
+"Te gusta viajar con tu familia 👨‍👩‍👧‍👦💖",
+"Te gusta la honestidad sin rodeos 🤍",
+"Te importa mucho tu mamá 💕",
+"Te esfuerzas por estudiar sin rendirte 📖💪",
+"Para ti rendirse no es una opción 🌟",
+"Te encanta el pan 😄",
+"Tienes un humor único 💫",
+"Vas a conocer todo el mundo !😂",
+"Te gusta aprender constantemente 💼💖",
+"Cuida a Peluchin 🫶",
+"Te gustan la naturaleza💫",
+"Te gusta aprender aunque no seas fan de la tecnología  jajaja📱✨",
+"Eres humilde e increíble 🌸",
+"Te gusta ayudar sin presumir 🤍",
+"Te encanta imaginar casas en la playa 🏖️🏡",
+"Sueñas con libertad y tranquilidad 🌿",
+"Te importa mucho la justicia social ⚖️💖",
+"Te duele ver sufrir a los niños 😔💔",
+"Siempre piensas en los demás 💞",
+"Eres muy empática 🌷",
+"Te encanta hablar de tus sueños 💫",
+"Te gusta motivar a los demás 🚀",
+"Me dices que participe en cosas grandes 🌟",
+"Crees en mí incluso cuando fallo 💖",
+"Me haces sentir capaz 💪💫",
+"Te encanta bromear con lo de mentir (ojalá sea broma) 😂",
+"Siempre juegas con mis frases (usas mis propios hechisos en mi contra)😜",
+"Te gusta debatir 💬💖",
+"Siempre escuchas con atención 👂✨",
+"Te gusta aprender del contexto y la vida 🌍",
+"Eres reflexiva 🤍",
+"Te gusta mejorar cada día 🌱",
+"Te importa crecer como persona 🌸",
+"No te conformas con poco 💎",
+"Te gusta ser auténtica 💖",
+"No finges ser alguien más ✨",
+"Te gusta la paz antes que el drama 🕊️",
+"Te encanta apoyar sin presión 💞",
+"Me das ánimo 💫",
+"No me mientas Amiguita! jajajajaa 🚀",
+"Eres muy responsable 😌💖",
+"Te preocupas por mi futuro 🌟",
+"Siempre quieres que coma bien 🍎😂",
+"Te importa mi bienestar 🫶",
+"Aveces haces travesuras jajajajaja 💕",
+"Me das consejos de patrona ajaj 😄💖",
+"Te gusta cuidar a quienes quieres 🤍",
+"Siempre estás cuando te necesito 💫",
+"Compartimos gustos similares 🌙",
+"Me incluyes en tu mundo 💖",
+"Te gusta hacerme sentir parte de tu vida 🫶",
+"Un pastel de papa? 🤍",
+"Confías en mi (poquito) jajjaaja 🌱",
+"Me apoyas sin juzgar(si me jusgas solo que no te veo como lo haces) 💕",
+"Te importa que sea feliz 😊",
+"Me das tranquilidad 🕊️💖",
+"Eres una persona muy especial ✨",
+"Gracias por ser tú, sin cambiar nada 💌"
+];
+
+function checkPassword(){
+  const input = document.getElementById("password").value;
+  if(input === correctPassword){
+    document.getElementById("login").style.display="none";
+    document.getElementById("game").style.display="flex"; // Mantenemos flex
+    startMusic();
+    startParticles();
+    startGame();
+  }else{
+    alert("Contraseña incorrecta 💔");
+  }
+}
+
+/* 🎚 Fade romántico */
+function startMusic(){
+  const music = document.getElementById("bgMusic");
+  music.volume = 0;
+  music.play();
+
+  let fade = setInterval(() => {
+    if(music.volume < 0.6){
+      music.volume += 0.02;
+    } else {
+      clearInterval(fade);
+    }
+  }, 200);
+}
+
+/* ✨ Estrellas, mariposas y corazones sincronizados */
+function startParticles(){
+  const symbols = ["✨","⭐","🦋"];
+  setInterval(()=>{
+    // Partícula
+    const particle = document.createElement("div");
+    particle.classList.add("particle");
+    particle.innerHTML = symbols[Math.floor(Math.random()*symbols.length)];
+    particle.style.left = Math.random()*100 + "vw";
+    particle.style.top = "100vh";
+    document.body.appendChild(particle);
+    setTimeout(()=>{particle.remove();},6000);
+
+    // Corazón sincronizado
+    const heart = document.createElement("div");
+    heart.classList.add("heart");
+const element = ["🥖","💖","💖","💖","🧀","💰","🍞","💖","💖","💖"];
+
+const random = element[Math.floor(Math.random() * element.length)];
+
+heart.innerHTML = random;
+    heart.style.left = Math.random()*90 + "vw";
+    // Animación más larga y suave
+    const duration = 10000 + Math.random()*5000; // 10-15s
+    heart.style.animation = `float ${duration/1000}s linear forwards`;
+    heart.onclick = function(){
+      showMessage();
+      heart.remove();
+      score++;
+      document.getElementById("score").innerHTML="💖 "+score;
+      if(score>=100) showFinalLetter();
+    }
+    document.body.appendChild(heart);
+    setTimeout(()=>{heart.remove();}, duration);
+
+  },300); // cada 0.3s sale estrella+corazón
+}
+
+function startGame(){
+  setInterval(createHeart,500);
+}
+
+/* 💖 Crear corazón sincronizado con partículas */
+function createHeartSynced() {
+  const heart = document.createElement("div");
+  heart.classList.add("heart");
+//   heart.innerHTML = "💖";
+const element = ["🥖","💖","🧀","💰","🍞"];
+
+const random = element[Math.floor(Math.random() * element.length)];
+
+heart.innerHTML = random;
+  // Posición horizontal aleatoria
+  heart.style.left = Math.random() * 90 + "vw";
+  heart.style.bottom = "0px"; // empieza desde abajo
+
+  // Duración aleatoria 10-15s
+  const duration = 10000 + Math.random() * 5000;
+  heart.style.animation = `float ${duration / 1000}s linear forwards`;
+
+  // Evento de clic
+  heart.onclick = function () {
+    showMessage();
+    heart.remove();
+    score++;
+    document.getElementById("score").innerHTML = "💖 " + score;
+    if (score >= 8) showFinalLetter();
+  };
+
+  // Agregar al body
+  document.body.appendChild(heart);
+
+  // Remover al terminar la animación
+  setTimeout(() => {
+    heart.remove();
+  }, duration);
+}
+
+
+
+function showMessage(){
+  const box = document.getElementById("messageBox");
+  box.innerHTML = messages[Math.floor(Math.random()*messages.length)];
+  box.style.display = "block";
+
+  // Duración más larga: 5 segundos en lugar de 2
+  setTimeout(() => { box.style.display = "none"; }, 8000);
+}
+
+function showFinalLetter(){
+  document.getElementById("finalLetter").style.display="block";
+}
+</script>
+
+</body>
+</html>
